@@ -73,7 +73,7 @@
   select:focus, input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 2px rgba(217,178,74,.25); }
 
   /* ── Año ── */
-  .year { margin-top: 30px; }
+  .year { margin-top: 30px; scroll-margin-top: 74px; }
   .year-head { display: flex; align-items: baseline; gap: 12px; padding: 0 4px 10px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
   .year-head .yr { font-family: var(--serif); font-size: 30px; color: var(--gold-bright); line-height: 1; }
   .year-head .meta { color: var(--faint); font-size: 13px; }
@@ -108,6 +108,10 @@
   .note-box[hidden] { display: none; }
   .note-box input { width: 100%; font: inherit; font-size: 13.5px; color: var(--text);
     background: var(--panel2); border: 1px solid var(--border2); border-radius: 8px; padding: 7px 10px; }
+  .meta-row { display: flex; flex-wrap: wrap; gap: 5px 14px; align-items: center; margin-top: 5px; }
+  .links { display: inline-flex; gap: 13px; flex-wrap: wrap; }
+  .links a { color: var(--muted); font-size: 12.5px; text-decoration: none; white-space: nowrap; }
+  .links a:hover { color: var(--gold); text-decoration: underline; }
 
   .stars { display: inline-flex; gap: 2px; flex: none; }
   .stars .s { cursor: pointer; font-size: 18px; line-height: 1; color: #3a3542; user-select: none; transition: color .1s, transform .1s; }
@@ -153,6 +157,7 @@
       <option value="desc">Recientes primero</option>
       <option value="asc">Antiguas primero</option>
     </select>
+    <select id="goto" aria-label="Ir a un año"><option value="">Ir al año…</option></select>
     <button class="reset" id="reset" type="button">Reiniciar</button>
   </div>
 
@@ -480,7 +485,7 @@
       var seen = y.n.filter(function (f) { return rec(f[0]).seen; }).length;
       var pct = Math.round(seen / y.n.length * 100);
 
-      html += '<section class="year">' +
+      html += '<section class="year" id="y' + y.c + '">' +
         '<div class="year-head"><span class="yr">' + y.c + '</span>' +
         '<span class="meta">ceremonia ' + y.c + ' · películas de ' + y.f + '</span>' +
         '<span class="count">' + seen + '/' + y.n.length + '</span></div>' +
@@ -489,12 +494,20 @@
 
       films.forEach(function (f) {
         var t = f[0], r = rec(t);
+        var qq = encodeURIComponent(t);
         html += '<li class="film' + (f[2] ? " win" : "") + (r.seen ? " seen" : "") + '" data-title="' + esc(t) + '">' +
           '<input type="checkbox" class="chk" ' + (r.seen ? "checked" : "") + ' aria-label="Marcar ' + esc(t) + ' como vista">' +
           '<div class="info">' +
             '<div><span class="title">' + esc(t) + '</span>' + (f[2] ? '<span class="win-badge">🏆 GANADORA</span>' : "") + '</div>' +
             '<div class="dir">' + esc(f[1]) + '</div>' +
-            '<button class="note-btn" data-act="note">📝 ' + (r.note ? "Nota: " + esc(r.note) : "Añadir nota") + '</button>' +
+            '<div class="meta-row">' +
+              '<span class="links">' +
+                '<a href="https://www.imdb.com/find/?q=' + qq + '&s=tt" target="_blank" rel="noopener noreferrer">IMDb ↗</a>' +
+                '<a href="https://www.filmaffinity.com/es/search.php?stext=' + qq + '" target="_blank" rel="noopener noreferrer">FilmAffinity ↗</a>' +
+                '<a href="https://www.justwatch.com/es/buscar?q=' + qq + '" target="_blank" rel="noopener noreferrer">▶ Dónde ver</a>' +
+              '</span>' +
+              '<button class="note-btn" data-act="note">📝 ' + (r.note ? "Nota: " + esc(r.note) : "Añadir nota") + '</button>' +
+            '</div>' +
             '<div class="note-box" hidden><input type="text" value="' + esc(r.note || "") + '" placeholder="Tu comentario sobre la película…"></div>' +
           '</div>' +
           '<div class="stars" role="group" aria-label="Puntuación">' + starsHTML(r.rating) + '</div>' +
@@ -548,6 +561,16 @@
     section.querySelector(".count").textContent = seen + "/" + y.n.length;
     section.querySelector(".year-bar > span").style.width = Math.round(seen / y.n.length * 100) + "%";
   }
+
+  // Selector "Ir al año"
+  var goto = document.getElementById("goto");
+  goto.innerHTML = '<option value="">Ir al año…</option>' +
+    DATA.slice().sort(function (a, b) { return b.c - a.c; }).map(function (y) { return '<option value="' + y.c + '">' + y.c + '</option>'; }).join("");
+  goto.addEventListener("change", function () {
+    var v = this.value;
+    if (v) { var el = document.getElementById("y" + v); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }
+    this.value = "";
+  });
 
   ["q", "filtro", "orden"].forEach(function (id) { document.getElementById(id).addEventListener("input", render); });
   document.getElementById("reset").addEventListener("click", function () {
