@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Mi Checklist de los Oscars · Mejor Película</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #0a0a0c;
+    --panel: #141319;
+    --panel2: #1b1a21;
+    --border: #2b2833;
+    --border2: #3a3542;
+    --text: #f3efe6;
+    --muted: #a29b8f;
+    --faint: #6f6a60;
+    --gold: #d9b24a;
+    --gold-bright: #f2dc93;
+    --gold-deep: #a8842f;
+    --win-bg: rgba(217,178,74,.10);
+    --track: #26232c;
+    --serif: "Didot", "Bodoni 72", "Playfair Display", "Hoefler Text", Garamond, Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: var(--sans); font-size: 16px; line-height: 1.5;
+    background-image: radial-gradient(1200px 500px at 50% -8%, rgba(217,178,74,.10), transparent 70%);
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 40px 22px 80px; }
+
+  /* ── Cabecera ── */
+  header { text-align: center; margin-bottom: 26px; }
+  .oscar { font-size: 46px; line-height: 1; filter: drop-shadow(0 2px 10px rgba(217,178,74,.45)); }
+  h1 {
+    font-family: var(--serif); font-weight: 600; font-size: clamp(30px, 6vw, 46px);
+    margin: 12px 0 6px; letter-spacing: .01em; text-wrap: balance;
+    background: linear-gradient(180deg, var(--gold-bright), var(--gold) 55%, var(--gold-deep));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .sub { color: var(--muted); font-size: 15px; margin: 0; }
+  .sub b { color: var(--gold); font-weight: 600; }
+
+  /* ── Progreso global ── */
+  .progress-card {
+    margin: 26px 0 10px; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px; padding: 18px 20px; box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  }
+  .progress-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  .progress-top .big { font-family: var(--serif); font-size: 26px; color: var(--text); }
+  .progress-top .big b { color: var(--gold-bright); }
+  .progress-top .pct { font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .bar { height: 12px; background: var(--track); border-radius: 999px; overflow: hidden; }
+  .bar > span { display: block; height: 100%; width: 0;
+    background: linear-gradient(90deg, var(--gold-deep), var(--gold) 50%, var(--gold-bright));
+    border-radius: 999px; transition: width .4s ease; }
+
+  /* ── Controles ── */
+  .controls {
+    position: sticky; top: 0; z-index: 5; margin: 18px -22px 0; padding: 12px 22px;
+    background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border); display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+  }
+  input[type="search"], select {
+    font: inherit; font-size: 14px; color: var(--text);
+    background: var(--panel2); border: 1px solid var(--border2); border-radius: 9px; padding: 9px 12px;
+  }
+  input[type="search"] { flex: 1 1 200px; min-width: 150px; }
+  input[type="search"]::placeholder { color: var(--faint); }
+  select:hover, input:hover { border-color: var(--gold-deep); }
+  select:focus, input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 2px rgba(217,178,74,.25); }
+
+  /* ── Año ── */
+  .year { margin-top: 30px; }
+  .year-head { display: flex; align-items: baseline; gap: 12px; padding: 0 4px 10px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .year-head .yr { font-family: var(--serif); font-size: 30px; color: var(--gold-bright); line-height: 1; }
+  .year-head .meta { color: var(--faint); font-size: 13px; }
+  .year-head .count { margin-left: auto; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .year-bar { height: 4px; background: var(--track); border-radius: 999px; overflow: hidden; margin: 8px 4px 0; }
+  .year-bar > span { display: block; height: 100%; background: var(--gold); border-radius: 999px; transition: width .3s; }
+
+  /* ── Fila película ── */
+  ul.films { list-style: none; margin: 6px 0 0; padding: 0; }
+  li.film {
+    display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px;
+    padding: 12px 12px; border-radius: 11px; border: 1px solid transparent;
+  }
+  li.film:hover { background: var(--panel); }
+  li.film.win { background: var(--win-bg); border-color: rgba(217,178,74,.28); }
+  li.film.seen .title { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--gold-deep); }
+
+  .chk { appearance: none; -webkit-appearance: none; width: 22px; height: 22px; margin: 0; cursor: pointer;
+    border: 2px solid var(--border2); border-radius: 6px; background: var(--panel2); position: relative; flex: none; transition: .12s; }
+  .chk:hover { border-color: var(--gold); }
+  .chk:checked { background: var(--gold); border-color: var(--gold); }
+  .chk:checked::after { content: "✓"; position: absolute; inset: 0; display: grid; place-items: center; color: #1a1406; font-size: 15px; font-weight: 900; }
+  .chk:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+  .info { min-width: 0; }
+  .title { font-size: 16px; font-weight: 600; }
+  .win-badge { color: var(--gold-bright); font-size: 12px; font-weight: 700; letter-spacing: .04em; margin-left: 7px; white-space: nowrap; }
+  .dir { color: var(--faint); font-size: 13px; margin-top: 1px; }
+  .note-btn { background: none; border: none; color: var(--faint); cursor: pointer; font-size: 13px; padding: 2px 4px; margin-top: 2px; }
+  .note-btn:hover { color: var(--gold); }
+  .note-box { margin-top: 7px; }
+  .note-box[hidden] { display: none; }
+  .note-box input { width: 100%; font: inherit; font-size: 13.5px; color: var(--text);
+    background: var(--panel2); border: 1px solid var(--border2); border-radius: 8px; padding: 7px 10px; }
+
+  .stars { display: inline-flex; gap: 2px; flex: none; }
+  .stars .s { cursor: pointer; font-size: 18px; line-height: 1; color: #3a3542; user-select: none; transition: color .1s, transform .1s; }
+  .stars .s.on { color: var(--gold); }
+  .stars .s:hover { transform: scale(1.18); }
+
+  .empty { color: var(--faint); text-align: center; padding: 40px 0; }
+  footer { color: var(--faint); font-size: 12.5px; text-align: center; margin-top: 44px; line-height: 1.7; }
+  .reset { background: none; border: 1px solid var(--border2); color: var(--faint); border-radius: 8px; padding: 6px 11px; font: inherit; font-size: 12.5px; cursor: pointer; }
+  .reset:hover { border-color: var(--gold-deep); color: var(--gold); }
+  @media (max-width: 520px) {
+    .controls { margin: 18px -14px 0; padding: 10px 14px; }
+    .wrap { padding: 28px 14px 60px; }
+    li.film { grid-template-columns: auto 1fr; }
+    .stars { grid-column: 2; justify-content: flex-start; margin-top: 2px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="oscar">🏆</div>
+    <h1>Mi Checklist de los Oscars</h1>
+    <p class="sub">Todas las nominadas a <b>Mejor Película</b> · ceremonias 2000 – 2025</p>
+  </header>
+
+  <div class="progress-card">
+    <div class="progress-top">
+      <div class="big"><b id="p-seen">0</b> de <span id="p-total">0</span> vistas</div>
+      <div class="pct" id="p-pct">0%</div>
+    </div>
+    <div class="bar"><span id="p-fill"></span></div>
+  </div>
+
+  <div class="controls">
+    <input type="search" id="q" placeholder="Buscar película o director…" aria-label="Buscar">
+    <select id="filtro" aria-label="Filtrar">
+      <option value="todas">Todas</option>
+      <option value="pendientes">Solo pendientes</option>
+      <option value="vistas">Solo vistas</option>
+    </select>
+    <select id="orden" aria-label="Orden">
+      <option value="desc">Recientes primero</option>
+      <option value="asc">Antiguas primero</option>
+    </select>
+    <button class="reset" id="reset" type="button">Reiniciar</button>
+  </div>
+
+  <div id="lista"></div>
+
+  <footer>
+    Datos orientativos, compilados de memoria — puede haber algún error o hueco. La ceremonia de 2026 se añadirá cuando esté confirmada.<br>
+    Tu progreso se guarda en este navegador. 🎬
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // [título, director, ganadora(1/0)]
+  var DATA = [
+    { c:2000, f:1999, n:[
+      ["American Beauty","Sam Mendes",1],
+      ["The Cider House Rules","Lasse Hallström",0],
+      ["The Green Mile","Frank Darabont",0],
+      ["The Insider","Michael Mann",0],
+      ["The Sixth Sense","M. Night Shyamalan",0]
+    ]},
+    { c:2001, f:2000, n:[
+      ["Gladiator","Ridley Scott",1],
+      ["Chocolat","Lasse Hallström",0],
+      ["Crouching Tiger, Hidden Dragon","Ang Lee",0],
+      ["Erin Brockovich","Steven Soderbergh",0],
+      ["Traffic","Steven Soderbergh",0]
+    ]},
+    { c:2002, f:2001, n:[
+      ["A Beautiful Mind","Ron Howard",1],
+      ["Gosford Park","Robert Altman",0],
+      ["In the Bedroom","Todd Field",0],
+      ["The Lord of the Rings: The Fellowship of the Ring","Peter Jackson",0],
+      ["Moulin Rouge!","Baz Luhrmann",0]
+    ]},
+    { c:2003, f:2002, n:[
+      ["Chicago","Rob Marshall",1],
+      ["Gangs of New York","Martin Scorsese",0],
+      ["The Hours","Stephen Daldry",0],
+      ["The Lord of the Rings: The Two Towers","Peter Jackson",0],
+      ["The Pianist","Roman Polanski",0]
+    ]},
+    { c:2004, f:2003, n:[
+      ["The Lord of the Rings: The Return of the King","Peter Jackson",1],
+      ["Lost in Translation","Sofia Coppola",0],
+      ["Master and Commander: The Far Side of the World","Peter Weir",0],
+      ["Mystic River","Clint Eastwood",0],
+      ["Seabiscuit","Gary Ross",0]
+    ]},
+    { c:2005, f:2004, n:[
+      ["Million Dollar Baby","Clint Eastwood",1],
+      ["The Aviator","Martin Scorsese",0],
+      ["Finding Neverland","Marc Forster",0],
+      ["Ray","Taylor Hackford",0],
+      ["Sideways","Alexander Payne",0]
+    ]},
+    { c:2006, f:2005, n:[
+      ["Crash","Paul Haggis",1],
+      ["Brokeback Mountain","Ang Lee",0],
+      ["Capote","Bennett Miller",0],
+      ["Good Night, and Good Luck","George Clooney",0],
+      ["Munich","Steven Spielberg",0]
+    ]},
+    { c:2007, f:2006, n:[
+      ["The Departed","Martin Scorsese",1],
+      ["Babel","Alejandro González Iñárritu",0],
+      ["Letters from Iwo Jima","Clint Eastwood",0],
+      ["Little Miss Sunshine","Jonathan Dayton y Valerie Faris",0],
+      ["The Queen","Stephen Frears",0]
+    ]},
+    { c:2008, f:2007, n:[
+      ["No Country for Old Men","Joel y Ethan Coen",1],
+      ["Atonement","Joe Wright",0],
+      ["Juno","Jason Reitman",0],
+      ["Michael Clayton","Tony Gilroy",0],
+      ["There Will Be Blood","Paul Thomas Anderson",0]
+    ]},
+    { c:2009, f:2008, n:[
+      ["Slumdog Millionaire","Danny Boyle",1],
+      ["The Curious Case of Benjamin Button","David Fincher",0],
+      ["Frost/Nixon","Ron Howard",0],
+      ["Milk","Gus Van Sant",0],
+      ["The Reader","Stephen Daldry",0]
+    ]},
+    { c:2010, f:2009, n:[
+      ["The Hurt Locker","Kathryn Bigelow",1],
+      ["Avatar","James Cameron",0],
+      ["The Blind Side","John Lee Hancock",0],
+      ["District 9","Neill Blomkamp",0],
+      ["An Education","Lone Scherfig",0],
+      ["Inglourious Basterds","Quentin Tarantino",0],
+      ["Precious","Lee Daniels",0],
+      ["A Serious Man","Joel y Ethan Coen",0],
+      ["Up","Pete Docter",0],
+      ["Up in the Air","Jason Reitman",0]
+    ]},
+    { c:2011, f:2010, n:[
+      ["The King's Speech","Tom Hooper",1],
+      ["127 Hours","Danny Boyle",0],
+      ["Black Swan","Darren Aronofsky",0],
+      ["The Fighter","David O. Russell",0],
+      ["Inception","Christopher Nolan",0],
+      ["The Kids Are All Right","Lisa Cholodenko",0],
+      ["The Social Network","David Fincher",0],
+      ["Toy Story 3","Lee Unkrich",0],
+      ["True Grit","Joel y Ethan Coen",0],
+      ["Winter's Bone","Debra Granik",0]
+    ]},
+    { c:2012, f:2011, n:[
+      ["The Artist","Michel Hazanavicius",1],
+      ["The Descendants","Alexander Payne",0],
+      ["Extremely Loud & Incredibly Close","Stephen Daldry",0],
+      ["The Help","Tate Taylor",0],
+      ["Hugo","Martin Scorsese",0],
+      ["Midnight in Paris","Woody Allen",0],
+      ["Moneyball","Bennett Miller",0],
+      ["The Tree of Life","Terrence Malick",0],
+      ["War Horse","Steven Spielberg",0]
+    ]},
+    { c:2013, f:2012, n:[
+      ["Argo","Ben Affleck",1],
+      ["Amour","Michael Haneke",0],
+      ["Beasts of the Southern Wild","Benh Zeitlin",0],
+      ["Django Unchained","Quentin Tarantino",0],
+      ["Les Misérables","Tom Hooper",0],
+      ["Life of Pi","Ang Lee",0],
+      ["Lincoln","Steven Spielberg",0],
+      ["Silver Linings Playbook","David O. Russell",0],
+      ["Zero Dark Thirty","Kathryn Bigelow",0]
+    ]},
+    { c:2014, f:2013, n:[
+      ["12 Years a Slave","Steve McQueen",1],
+      ["American Hustle","David O. Russell",0],
+      ["Captain Phillips","Paul Greengrass",0],
+      ["Dallas Buyers Club","Jean-Marc Vallée",0],
+      ["Gravity","Alfonso Cuarón",0],
+      ["Her","Spike Jonze",0],
+      ["Nebraska","Alexander Payne",0],
+      ["Philomena","Stephen Frears",0],
+      ["The Wolf of Wall Street","Martin Scorsese",0]
+    ]},
+    { c:2015, f:2014, n:[
+      ["Birdman","Alejandro González Iñárritu",1],
+      ["American Sniper","Clint Eastwood",0],
+      ["Boyhood","Richard Linklater",0],
+      ["The Grand Budapest Hotel","Wes Anderson",0],
+      ["The Imitation Game","Morten Tyldum",0],
+      ["Selma","Ava DuVernay",0],
+      ["The Theory of Everything","James Marsh",0],
+      ["Whiplash","Damien Chazelle",0]
+    ]},
+    { c:2016, f:2015, n:[
+      ["Spotlight","Tom McCarthy",1],
+      ["The Big Short","Adam McKay",0],
+      ["Bridge of Spies","Steven Spielberg",0],
+      ["Brooklyn","John Crowley",0],
+      ["Mad Max: Fury Road","George Miller",0],
+      ["The Martian","Ridley Scott",0],
+      ["The Revenant","Alejandro González Iñárritu",0],
+      ["Room","Lenny Abrahamson",0]
+    ]},
+    { c:2017, f:2016, n:[
+      ["Moonlight","Barry Jenkins",1],
+      ["Arrival","Denis Villeneuve",0],
+      ["Fences","Denzel Washington",0],
+      ["Hacksaw Ridge","Mel Gibson",0],
+      ["Hell or High Water","David Mackenzie",0],
+      ["Hidden Figures","Theodore Melfi",0],
+      ["La La Land","Damien Chazelle",0],
+      ["Lion","Garth Davis",0],
+      ["Manchester by the Sea","Kenneth Lonergan",0]
+    ]},
+    { c:2018, f:2017, n:[
+      ["The Shape of Water","Guillermo del Toro",1],
+      ["Call Me by Your Name","Luca Guadagnino",0],
+      ["Darkest Hour","Joe Wright",0],
+      ["Dunkirk","Christopher Nolan",0],
+      ["Get Out","Jordan Peele",0],
+      ["Lady Bird","Greta Gerwig",0],
+      ["Phantom Thread","Paul Thomas Anderson",0],
+      ["The Post","Steven Spielberg",0],
+      ["Three Billboards Outside Ebbing, Missouri","Martin McDonagh",0]
+    ]},
+    { c:2019, f:2018, n:[
+      ["Green Book","Peter Farrelly",1],
+      ["Black Panther","Ryan Coogler",0],
+      ["BlacKkKlansman","Spike Lee",0],
+      ["Bohemian Rhapsody","Bryan Singer",0],
+      ["The Favourite","Yorgos Lanthimos",0],
+      ["Roma","Alfonso Cuarón",0],
+      ["A Star Is Born","Bradley Cooper",0],
+      ["Vice","Adam McKay",0]
+    ]},
+    { c:2020, f:2019, n:[
+      ["Parasite","Bong Joon-ho",1],
+      ["Ford v Ferrari","James Mangold",0],
+      ["The Irishman","Martin Scorsese",0],
+      ["Jojo Rabbit","Taika Waititi",0],
+      ["Joker","Todd Phillips",0],
+      ["Little Women","Greta Gerwig",0],
+      ["Marriage Story","Noah Baumbach",0],
+      ["1917","Sam Mendes",0],
+      ["Once Upon a Time in Hollywood","Quentin Tarantino",0]
+    ]},
+    { c:2021, f:2020, n:[
+      ["Nomadland","Chloé Zhao",1],
+      ["The Father","Florian Zeller",0],
+      ["Judas and the Black Messiah","Shaka King",0],
+      ["Mank","David Fincher",0],
+      ["Minari","Lee Isaac Chung",0],
+      ["Promising Young Woman","Emerald Fennell",0],
+      ["Sound of Metal","Darius Marder",0],
+      ["The Trial of the Chicago 7","Aaron Sorkin",0]
+    ]},
+    { c:2022, f:2021, n:[
+      ["CODA","Sian Heder",1],
+      ["Belfast","Kenneth Branagh",0],
+      ["Don't Look Up","Adam McKay",0],
+      ["Drive My Car","Ryûsuke Hamaguchi",0],
+      ["Dune","Denis Villeneuve",0],
+      ["King Richard","Reinaldo Marcus Green",0],
+      ["Licorice Pizza","Paul Thomas Anderson",0],
+      ["Nightmare Alley","Guillermo del Toro",0],
+      ["The Power of the Dog","Jane Campion",0],
+      ["West Side Story","Steven Spielberg",0]
+    ]},
+    { c:2023, f:2022, n:[
+      ["Everything Everywhere All at Once","Daniel Kwan y Daniel Scheinert",1],
+      ["All Quiet on the Western Front","Edward Berger",0],
+      ["Avatar: The Way of Water","James Cameron",0],
+      ["The Banshees of Inisherin","Martin McDonagh",0],
+      ["Elvis","Baz Luhrmann",0],
+      ["The Fabelmans","Steven Spielberg",0],
+      ["Tár","Todd Field",0],
+      ["Top Gun: Maverick","Joseph Kosinski",0],
+      ["Triangle of Sadness","Ruben Östlund",0],
+      ["Women Talking","Sarah Polley",0]
+    ]},
+    { c:2024, f:2023, n:[
+      ["Oppenheimer","Christopher Nolan",1],
+      ["American Fiction","Cord Jefferson",0],
+      ["Anatomy of a Fall","Justine Triet",0],
+      ["Barbie","Greta Gerwig",0],
+      ["The Holdovers","Alexander Payne",0],
+      ["Killers of the Flower Moon","Martin Scorsese",0],
+      ["Maestro","Bradley Cooper",0],
+      ["Past Lives","Celine Song",0],
+      ["Poor Things","Yorgos Lanthimos",0],
+      ["The Zone of Interest","Jonathan Glazer",0]
+    ]},
+    { c:2025, f:2024, n:[
+      ["Anora","Sean Baker",1],
+      ["The Brutalist","Brady Corbet",0],
+      ["A Complete Unknown","James Mangold",0],
+      ["Conclave","Edward Berger",0],
+      ["Dune: Part Two","Denis Villeneuve",0],
+      ["Emilia Pérez","Jacques Audiard",0],
+      ["I'm Still Here","Walter Salles",0],
+      ["Nickel Boys","RaMell Ross",0],
+      ["The Substance","Coralie Fargeat",0],
+      ["Wicked","Jon M. Chu",0]
+    ]}
+  ];
+
+  var TOTAL = DATA.reduce(function (s, y) { return s + y.n.length; }, 0);
+
+  // ── Persistencia ──
+  var KEY = "oscars_v1";
+  var store = {};
+  try { store = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { store = {}; }
+  function saveStore() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
+  function rec(t) { return store[t] || { seen: false, rating: 0, note: "" }; }
+  function put(t, r) { store[t] = r; saveStore(); }
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" })[c]; }); }
+
+  var lista = document.getElementById("lista");
+  var elSeen = document.getElementById("p-seen");
+  var elPct = document.getElementById("p-pct");
+  var elFill = document.getElementById("p-fill");
+  document.getElementById("p-total").textContent = TOTAL;
+
+  function seenCount() {
+    var n = 0;
+    DATA.forEach(function (y) { y.n.forEach(function (f) { if (rec(f[0]).seen) n++; }); });
+    return n;
+  }
+  function updateGlobal() {
+    var s = seenCount();
+    elSeen.textContent = s;
+    var pct = TOTAL ? Math.round(s / TOTAL * 100) : 0;
+    elPct.textContent = pct + "%";
+    elFill.style.width = pct + "%";
+  }
+
+  function starsHTML(rating) {
+    var h = "";
+    for (var i = 1; i <= 5; i++) h += '<span class="s' + (i <= rating ? " on" : "") + '" data-star="' + i + '">★</span>';
+    return h;
+  }
+
+  function render() {
+    var q = document.getElementById("q").value.trim().toLowerCase();
+    var filtro = document.getElementById("filtro").value;
+    var orden = document.getElementById("orden").value;
+
+    var years = DATA.slice().sort(function (a, b) { return orden === "asc" ? a.c - b.c : b.c - a.c; });
+    var html = "";
+    var anyShown = false;
+
+    years.forEach(function (y) {
+      var films = y.n.filter(function (f) {
+        var r = rec(f[0]);
+        if (filtro === "pendientes" && r.seen) return false;
+        if (filtro === "vistas" && !r.seen) return false;
+        if (q && f[0].toLowerCase().indexOf(q) === -1 && f[1].toLowerCase().indexOf(q) === -1) return false;
+        return true;
+      });
+      if (!films.length) return;
+      anyShown = true;
+
+      var seen = y.n.filter(function (f) { return rec(f[0]).seen; }).length;
+      var pct = Math.round(seen / y.n.length * 100);
+
+      html += '<section class="year">' +
+        '<div class="year-head"><span class="yr">' + y.c + '</span>' +
+        '<span class="meta">ceremonia ' + y.c + ' · películas de ' + y.f + '</span>' +
+        '<span class="count">' + seen + '/' + y.n.length + '</span></div>' +
+        '<div class="year-bar"><span style="width:' + pct + '%"></span></div>' +
+        '<ul class="films">';
+
+      films.forEach(function (f) {
+        var t = f[0], r = rec(t);
+        html += '<li class="film' + (f[2] ? " win" : "") + (r.seen ? " seen" : "") + '" data-title="' + esc(t) + '">' +
+          '<input type="checkbox" class="chk" ' + (r.seen ? "checked" : "") + ' aria-label="Marcar ' + esc(t) + ' como vista">' +
+          '<div class="info">' +
+            '<div><span class="title">' + esc(t) + '</span>' + (f[2] ? '<span class="win-badge">🏆 GANADORA</span>' : "") + '</div>' +
+            '<div class="dir">' + esc(f[1]) + '</div>' +
+            '<button class="note-btn" data-act="note">📝 ' + (r.note ? "Nota: " + esc(r.note) : "Añadir nota") + '</button>' +
+            '<div class="note-box" hidden><input type="text" value="' + esc(r.note || "") + '" placeholder="Tu comentario sobre la película…"></div>' +
+          '</div>' +
+          '<div class="stars" role="group" aria-label="Puntuación">' + starsHTML(r.rating) + '</div>' +
+        '</li>';
+      });
+      html += "</ul></section>";
+    });
+
+    lista.innerHTML = anyShown ? html : '<p class="empty">No hay películas con ese filtro o búsqueda.</p>';
+    updateGlobal();
+  }
+
+  // ── Eventos (delegación) ──
+  lista.addEventListener("change", function (e) {
+    if (e.target.classList.contains("chk")) {
+      var li = e.target.closest(".film"); var t = li.getAttribute("data-title");
+      var r = rec(t); r.seen = e.target.checked; put(t, r);
+      li.classList.toggle("seen", r.seen);
+      // Si un filtro oculta la fila, re-render; si no, solo actualiza progreso
+      if (document.getElementById("filtro").value !== "todas") render(); else { updateGlobal(); updateYearBar(li); }
+    }
+  });
+  lista.addEventListener("input", function (e) {
+    if (e.target.matches(".note-box input")) {
+      var li = e.target.closest(".film"); var t = li.getAttribute("data-title");
+      var r = rec(t); r.note = e.target.value; put(t, r);
+      li.querySelector('[data-act="note"]').textContent = "📝 " + (r.note ? "Nota: " + r.note : "Añadir nota");
+    }
+  });
+  lista.addEventListener("click", function (e) {
+    var star = e.target.closest(".s");
+    if (star) {
+      var li = e.target.closest(".film"); var t = li.getAttribute("data-title");
+      var val = parseInt(star.getAttribute("data-star"), 10);
+      var r = rec(t); r.rating = (r.rating === val) ? 0 : val; put(t, r);
+      var group = li.querySelector(".stars");
+      group.querySelectorAll(".s").forEach(function (s) {
+        s.classList.toggle("on", parseInt(s.getAttribute("data-star"), 10) <= r.rating);
+      });
+      return;
+    }
+    var nb = e.target.closest('[data-act="note"]');
+    if (nb) { var box = nb.nextElementSibling; box.hidden = !box.hidden; if (!box.hidden) box.querySelector("input").focus(); }
+  });
+
+  function updateYearBar(li) {
+    var section = li.closest(".year"); if (!section) return;
+    var yr = parseInt(section.querySelector(".yr").textContent, 10);
+    var y = DATA.find(function (d) { return d.c === yr; });
+    var seen = y.n.filter(function (f) { return rec(f[0]).seen; }).length;
+    section.querySelector(".count").textContent = seen + "/" + y.n.length;
+    section.querySelector(".year-bar > span").style.width = Math.round(seen / y.n.length * 100) + "%";
+  }
+
+  ["q", "filtro", "orden"].forEach(function (id) { document.getElementById(id).addEventListener("input", render); });
+  document.getElementById("reset").addEventListener("click", function () {
+    if (!confirm("¿Borrar todo tu progreso (vistas, notas y puntuaciones)?")) return;
+    store = {}; saveStore(); render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
