@@ -133,7 +133,7 @@
   <header>
     <div class="oscar">🏆</div>
     <h1>Mi Checklist de los Oscars</h1>
-    <p class="sub">Todas las nominadas a <b>Mejor Película</b> · ceremonias 2000 – 2025</p>
+    <p class="sub">Todas las nominadas a <b>Mejor Película</b> · ceremonias 2000 – 2026</p>
   </header>
 
   <div class="progress-card">
@@ -145,7 +145,7 @@
   </div>
 
   <div class="controls">
-    <input type="search" id="q" placeholder="Buscar película o director…" aria-label="Buscar">
+    <input type="search" id="q" placeholder="Buscar película, director o año (ej. 2012)…" aria-label="Buscar">
     <select id="anio" aria-label="Año"><option value="todos">Todos los años</option></select>
     <select id="filtro" aria-label="Filtrar">
       <option value="todas">Todas</option>
@@ -162,7 +162,7 @@
   <div id="lista"></div>
 
   <footer>
-    Notas de <b>IMDb</b> y <b>FilmAffinity</b> orientativas y fijas (mi conocimiento, no en vivo). La lista se compiló de memoria: puede haber algún error o hueco. La ceremonia de 2026 se añadirá cuando esté confirmada.<br>
+    Notas de <b>IMDb</b> y <b>FilmAffinity</b> orientativas y fijas (mi conocimiento, no en vivo). La lista se compiló de memoria: puede haber algún error o hueco. Las notas de la ceremonia 2026 aparecen como “—” por ser películas muy recientes.<br>
     Tu progreso se guarda en este navegador. 🎬
   </footer>
 </div>
@@ -420,6 +420,18 @@
       ["Nickel Boys","RaMell Ross",0,7.0,6.8],
       ["The Substance","Coralie Fargeat",0,7.3,6.7],
       ["Wicked","Jon M. Chu",0,7.3,6.6]
+    ]},
+    { c:2026, f:2025, n:[
+      ["One Battle After Another","Paul Thomas Anderson",1,null,null],
+      ["Bugonia","Yorgos Lanthimos",0,null,null],
+      ["F1","Joseph Kosinski",0,null,null],
+      ["Frankenstein","Guillermo del Toro",0,null,null],
+      ["Hamnet","Chloé Zhao",0,null,null],
+      ["Marty Supreme","Josh Safdie",0,null,null],
+      ["The Secret Agent","Kleber Mendonça Filho",0,null,null],
+      ["Sentimental Value","Joachim Trier",0,null,null],
+      ["Sinners","Ryan Coogler",0,null,null],
+      ["Train Dreams","Clint Bentley",0,null,null]
     ]}
   ];
 
@@ -433,7 +445,7 @@
   function put(t, r) { store[t] = r; saveStore(); }
 
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" })[c]; }); }
-  function num(x) { return Number(x).toFixed(1); }
+  function num(x) { return (x == null) ? "—" : Number(x).toFixed(1); }
 
   var lista = document.getElementById("lista");
   var elSeen = document.getElementById("p-seen");
@@ -465,6 +477,7 @@
     var filtro = document.getElementById("filtro").value;
     var orden = document.getElementById("orden").value;
     var anio = document.getElementById("anio").value;
+    var yearSearch = q !== "" && /^\d+$/.test(q) && DATA.some(function (y) { return String(y.c).indexOf(q) === 0; });
 
     var years = DATA.slice().sort(function (a, b) { return orden === "asc" ? a.c - b.c : b.c - a.c; });
     if (anio !== "todos") years = years.filter(function (y) { return String(y.c) === anio; });
@@ -473,11 +486,12 @@
     var anyShown = false;
 
     years.forEach(function (y) {
+      if (yearSearch && String(y.c).indexOf(q) !== 0) return;
       var films = y.n.filter(function (f) {
         var r = rec(f[0]);
         if (filtro === "pendientes" && r.seen) return false;
         if (filtro === "vistas" && !r.seen) return false;
-        if (q && f[0].toLowerCase().indexOf(q) === -1 && f[1].toLowerCase().indexOf(q) === -1) return false;
+        if (q && !yearSearch && f[0].toLowerCase().indexOf(q) === -1 && f[1].toLowerCase().indexOf(q) === -1) return false;
         return true;
       });
       if (!films.length) return;
