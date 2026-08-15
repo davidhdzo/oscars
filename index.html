@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<title>Mi Checklist de los Oscars · Mejor Película</title>
+<title>Mi Checklist · Oscars &amp; Libros de Rory Gilmore</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   :root {
@@ -126,10 +126,25 @@
     li.film { grid-template-columns: auto 1fr; }
     .stars { grid-column: 2; justify-content: flex-start; margin-top: 2px; }
   }
+
+  .tabs { display: flex; gap: 8px; justify-content: center; margin-bottom: 18px; flex-wrap: wrap; }
+  .tab-btn {
+    font: inherit; font-size: 14px; font-weight: 600; color: var(--muted); cursor: pointer;
+    background: var(--panel2); border: 1px solid var(--border2); border-radius: 999px; padding: 8px 18px;
+  }
+  .tab-btn:hover { border-color: var(--gold-deep); color: var(--text); }
+  .tab-btn.active { background: var(--win-bg); border-color: var(--gold); color: var(--gold-bright); }
+  .page[hidden] { display: none; }
 </style>
 </head>
 <body>
 <div class="wrap">
+  <nav class="tabs">
+    <button class="tab-btn active" id="tab-oscars" data-tab="oscars" type="button">🏆 Películas</button>
+    <button class="tab-btn" id="tab-books" data-tab="books" type="button">📚 Libros</button>
+  </nav>
+
+  <section id="page-oscars" class="page">
   <header>
     <div class="oscar">🏆</div>
     <h1>Mi Checklist de los Oscars</h1>
@@ -165,6 +180,45 @@
     Notas de <b>IMDb</b> y <b>FilmAffinity</b> orientativas y fijas (no en vivo). Las de 2026 se consultaron en la web; la IMDb de <i>Frankenstein</i> es una estimación (no se pudo confirmar). Puede haber algún error o hueco.<br>
     Tu progreso se guarda en este navegador. 🎬
   </footer>
+  </section>
+
+  <section id="page-books" class="page" hidden>
+  <header>
+    <div class="oscar">📚</div>
+    <h1>Los Libros de Rory Gilmore</h1>
+    <p class="sub">Reto de lectura · <b>Gilmore Girls</b> (7 temporadas + revival)</p>
+  </header>
+
+  <div class="progress-card">
+    <div class="progress-top">
+      <div class="big"><b id="p-seen-b">0</b> de <span id="p-total-b">0</span> leídos</div>
+      <div class="pct" id="p-pct-b">0%</div>
+    </div>
+    <div class="bar"><span id="p-fill-b"></span></div>
+  </div>
+
+  <div class="controls">
+    <input type="search" id="q-b" placeholder="Buscar libro o autor…" aria-label="Buscar">
+    <select id="letra-b" aria-label="Letra"><option value="todas">Todas las letras</option></select>
+    <select id="filtro-b" aria-label="Filtrar">
+      <option value="todas">Todos</option>
+      <option value="pendientes">Solo pendientes</option>
+      <option value="vistas">Solo leídos</option>
+    </select>
+    <select id="orden-b" aria-label="Orden">
+      <option value="asc">A → Z</option>
+      <option value="desc">Z → A</option>
+    </select>
+    <button class="reset" id="reset-b" type="button">Reiniciar</button>
+  </div>
+
+  <div id="lista-b"></div>
+
+  <footer>
+    Lista de los ~400 libros nombrados a lo largo de <i>Gilmore Girls</i>, recopilada de <a class="watch" href="http://www.verodragonfly.com/2020/11/los-libros-de-rory-gilmore-reto-de.html" target="_blank" rel="noopener noreferrer">verodragonfly.com</a>.<br>
+    Tu progreso se guarda en este navegador. 📖
+  </footer>
+  </section>
 </div>
 
 <script>
@@ -507,6 +561,404 @@
 
   var TOTAL = DATA.reduce(function (s, y) { return s + y.n.length; }, 0);
 
+  // [título, autor]
+  var BOOKS = [
+    ["1984","George Orwell"],
+    ["Las aventuras de Huckleberry Finn","Mark Twain"],
+    ["Alicia en el país de las maravillas","Lewis Carroll"],
+    ["Las asombrosas aventuras de Kavalier y Clay","Michael Chabon"],
+    ["Una tragedia americana","Theodore Dreiser"],
+    ["Las cenizas de Ángela","Frank McCourt"],
+    ["Anna Karenina","León Tolstoi"],
+    ["El diario de Ana Frank","Ana Frank"],
+    ["La Guerra del Peloponeso","Donald Kagan"],
+    ["El arte de la novela","Henry James"],
+    ["El arte de la guerra","Sun Tzu"],
+    ["Mientras agonizo","William Faulkner"],
+    ["Expiación","Ian McEwan"],
+    ["Autobiografía de una cara","Lucy Grealy"],
+    ["El despertar","Kate Chopin"],
+    ["Babe, el cerdito valiente","Dick King-Smith"],
+    ["Reacción. La guerra no declarada contra la mujer moderna","Susan Faludi"],
+    ["Balzac y la joven costurera china","Dai Sijie"],
+    ["Bel Canto","Ann Patchett"],
+    ["La campana de cristal","Sylvia Plath"],
+    ["Beloved","Toni Morrison"],
+    ["Beowulf: traducción en verso","Seamus Heaney"],
+    ["Bhágavad-guitá","Anónimo"],
+    ["The Bielski Brothers: The True Story of Three Men Who Defied the Nazis, Built a Village in the Forest, and Saved 1,200 Jews","Peter Duffy"],
+    ["Bitch in Praise of Difficult Women","Elizabeth Wurtzel"],
+    ["A Bolt from the Blue and Other Essays","Mary McCarthy"],
+    ["Un mundo feliz","Aldous Huxley"],
+    ["Siete mares, trece ríos","Monica Ali"],
+    ["Bridgadoon","Alan Jay Lerner"],
+    ["Cándido o el optimismo","Voltaire"],
+    ["Los cuentos de Canterbury","Chaucer"],
+    ["Carrie","Stephen King"],
+    ["Trampa-22","Joseph Heller"],
+    ["El guardián entre el centeno","J. D. Salinger"],
+    ["La telaraña de Carlota","E. B. White"],
+    ["La calumnia","Lillian Hellman"],
+    ["Christine","Stephen King"],
+    ["Canción de Navidad","Charles Dickens"],
+    ["La naranja mecánica","Anthony Burgess"],
+    ["El código de los Woosters","P. G. Wodehouse"],
+    ["Cuentos completos","Eudora Welty"],
+    ["La comedia de las equivocaciones","William Shakespeare"],
+    ["Obras completas","Dawn Powell"],
+    ["Poemas completos","Anne Sexton"],
+    ["Narrativa completa","Dorothy Parker"],
+    ["La conjura de los necios","John Kennedy Toole"],
+    ["El conde de Monte Cristo","Alejandro Dumas"],
+    ["La prima Bette","Honoré de Balzac"],
+    ["Crimen y castigo","Fiódor Dostoievski"],
+    ["Pétalo carmesí, flor blanca","Michel Faber"],
+    ["El crisol","Arthur Miller"],
+    ["Cujo","Stephen King"],
+    ["El curioso incidente del perro a medianoche","Mark Haddon"],
+    ["Hija de la fortuna","Isabel Allende"],
+    ["David and Lisa","Theodore Issac Rubin"],
+    ["David Copperfield","Charles Dickens"],
+    ["El código Da Vinci","Dan Brown"],
+    ["Almas muertas","Nikolai Gogol"],
+    ["Los endemoniados","Fiódor Dostoievski"],
+    ["Muerte de un viajante","Arthur Miller"],
+    ["Deenie","Judy Blume"],
+    ["El diablo en la ciudad blanca","Erik Larson"],
+    ["Los trapos sucios. Confesones del grupo de rock más infame del mundo","Tommy Lee, Vince Neil, Mick Mars y Nikki Sixx"],
+    ["La divina comedia","Dante Alighieri"],
+    ["The Divine Secrets of the Ya-Ya Sisterhood","Rebecca Wells"],
+    ["El Quijote","Cervantes"],
+    ["Paseando a Miss Daisy","Alfred Uhrv"],
+    ["El extraño caso del Dr. Jeckyll y Mr. Hyde","Robert Louis Stevenson"],
+    ["Edgar Allan Poe: Cuentos completos y Poemas","Edgar Allan Poe"],
+    ["Eleanor Roosevelt","Blanche Wiesen Cook"],
+    ["Ponche de ácido lisérgico","Tom Wolfe"],
+    ["Ella Minnow Pea: A Novel in Letters","Mark Dunn"],
+    ["Eloise","Kay Thompson"],
+    ["Emily the Strange: Los días perdidos","Rob Reger"],
+    ["Emma","Jane Austen"],
+    ["Empire Falls","Richard Russo"],
+    ["Encyclopedia Brown: Boy Detective","Donald J. Sobol"],
+    ["Ethan Frome","Edith Wharton"],
+    ["Ética","Spinoza"],
+    ["Europe through the Back Door, 2003","Rick Steves"],
+    ["Eva Luna","Isabel Allende"],
+    ["Todo está iluminado","Jonathan Safran Foer"],
+    ["Extravagancia","Gary Krist"],
+    ["Fahrenheit 451","Ray Bradbury"],
+    ["Fahrenheit 9/11","Michael Moore"],
+    ["The Fall of the Athenian Empire","Donald Kagan"],
+    ["Fat Land: How Americans Became the Fattest People in the World","Greg Critser"],
+    ["Miedo y asco en Las Vegas","Hunter S. Thompson"],
+    ["La comunidad del anillo (El Señor de los Anillos)","J. R. R. Tolkien"],
+    ["Fiddler on the Roof","Joseph Stein"],
+    ["Las cinco personas que encontrarás en el cielo","Mitch Albom"],
+    ["Finnegan's Wake","James Joyce"],
+    ["Fletch","Gregory McDonald"],
+    ["Flores para Algernon","Daniel Keyes"],
+    ["La fortaleza de la soledad","Jonathan Lethem"],
+    ["El manantial","Ayn Rand"],
+    ["Frankenstein","Mary Shelley"],
+    ["Franny y Zooey","J. D. Salinger"],
+    ["Un viernes embrujado","Mary Rodgers"],
+    ["Galápagos","Kurt Vonnegut"],
+    ["El género en disputa","Judith Butler"],
+    ["George W. Bushism: The Slate Book of the Accidental Wit and Wisdom of our 43rd President","Jacob Weisberg"],
+    ["Gidget","Fredrick Kohner"],
+    ["Inocencia interrumpida","Susanna Kaysen"],
+    ["Los Evangelios gnósticos","Elaine Pagels"],
+    ["El padrino","Mario Puzo"],
+    ["El dios de las pequeñas cosas","Arundhati Roy"],
+    ["Ricitos de oro y los tres ositos","Alvin Granowsky"],
+    ["Lo que el viento se llevó","Margaret Mitchell"],
+    ["El buen soldado","Ford Maddox Ford"],
+    ["The Gospel According to Judy Bloom",""],
+    ["El graduado","Charles Webb"],
+    ["Las uvas de la ira","John Steinbeck"],
+    ["El gran Gatsby","F. Scott Fitzgerald"],
+    ["Grandes esperanzas","Charles Dickens"],
+    ["El grupo","Mary McCarthy"],
+    ["Hamlet","William Shakespeare"],
+    ["Harry Potter y el cáliz de fuego","J. K. Rowling"],
+    ["Harry Potter y la piedra filosofal","J. K. Rowling"],
+    ["Una historia conmovedora, asombrosa y genial","Dave Eggers"],
+    ["El corazón de las tinieblas","Joseph Conrad"],
+    ["Manson. Retrato de una familia","Vincent Bugliosi y Curt Gentry"],
+    ["Enrique IV (I parte)","William Shakespeare"],
+    ["Enrique IV (II parte)","William Shakespeare"],
+    ["Enrique V","William Shakespeare"],
+    ["Alta fidelidad","Nick Hornby"],
+    ["Decadencia y caída del Imperio Romano","Edward Gibbon"],
+    ["Holidays on Ice: Stories","David Sedaris"],
+    ["The Holy Barbarians","Lawrence Lipton"],
+    ["House of Sand and Fog","Andre Dubus III"],
+    ["La casa de los espíritus","Isabel Allende"],
+    ["Cómo respirar bajo el agua","Julie Orringer"],
+    ["Cómo el Grinch robó la Navidad","Dr. Seuss"],
+    ["How the Light Gets in","M. J. Hyland"],
+    ["Aullido","Allen Gingsburg"],
+    ["Nuestra señora de París","Victor Hugo"],
+    ["Ilíada","Homero"],
+    ["I'm with the Band","Pamela des Barres"],
+    ["A sangre fría","Truman Capote"],
+    ["Inferno","Dante"],
+    ["Heredarás el viento","Jerome Lawrence y Robert E. Lee"],
+    ["Tallo de hierro","William J. Kennedy"],
+    ["Es labor de todos","Hillary Clinton"],
+    ["Jane Eyre","Charlotte Brontë"],
+    ["El club de la buena estrella","Amy Tan"],
+    ["Julio César","William Shakespeare"],
+    ["La célebre rana saltarina","Mark Twain"],
+    ["La jungla","Upton Sinclair"],
+    ["En un par de días","Tony Vigorito"],
+    ["The Kitchen Boy: A Novel of the Last Tsar","Robert Alexander"],
+    ["Cometas en el cielo","Khaled Hosseini"],
+    ["El amante de Lady Chaterley","D. H. Lawrence"],
+    ["El último imperio","Gore Vidal"],
+    ["Hojas de hierba","Walt Whitman"],
+    ["La leyenda de Bagger Vance","Steven Pressfield"],
+    ["Menos que cero","Bret Easton Ellis"],
+    ["Cartas a un joven poeta","Rainer Maria Rilke"],
+    ["Lies and the Lying Liars Who Tell Them","Al Franken"],
+    ["Vida de Pi","Yann Martel"],
+    ["La pequeña Dorrit","Charles Dickens"],
+    ["El pequeño cerrajero","Katharine Butler Hathaway"],
+    ["La pequeña cerillera","Hans Christian Andersen"],
+    ["Mujercitas","Louisa May Alcott"],
+    ["Historia viva","Hillary Rodham Clinton"],
+    ["El señor de las moscas","William Golding"],
+    ["La lotería y otras historias","Shirley Jackson"],
+    ["Desde mi cielo","Alice Sebold"],
+    ["Love Story","Erich Segal"],
+    ["Macbeth","William Shakespeare"],
+    ["Madame Bovary","Gustave Flaubert"],
+    ["Mantícora","Robertson Davies"],
+    ["Marathon Man","William Goldman"],
+    ["El maestro y Margarita","Mikhail Bulgakov"],
+    ["Memorias de una joven formal","Simone de Beauvoir"],
+    ["Memorias del General W. T. Sherman","William Tecumseh Sherman"],
+    ["Me Talk Pretty One Day","David Sedaris"],
+    ["The Meaning of Consuelo","Judith Ortiz Cofer"],
+    ["Mencken's Chrestomathy","H. R. Mencken"],
+    ["Las alegres comadres de Windsor","William Shakespeare"],
+    ["La metamorfosis","Franz Kafka"],
+    ["Middlesex","Jeffrey Eugenides"],
+    ["El milagro de Ana Sullivan","William Gibson"],
+    ["Moby Dick","Herman Melville"],
+    ["The Mojo Collection: The Ultimate Music Companion","Jim Irvin"],
+    ["Biografía de Moliere","Hobart Chatfield Taylor"],
+    ["A Monetary History of the United States","Milton Friedman"],
+    ["Monsieur Proust","Celeste Albaret"],
+    ["A Month Of Sundays: Searching For The Spirit And My Sister","Julie Mars"],
+    ["París era una fiesta","Ernest Hemingway"],
+    ["La señora Dalloway","Virginia Woolf"],
+    ["Motín a bordo / El motín de la Bounty","Charles Nordhoff y James Norman Hall"],
+    ["My Lai 4: A Report on the Massacre and It's Aftermath","Seymour M. Hersh"],
+    ["My Life as Author and Editor","H. R. Mencken"],
+    ["Mi vida en naranja: creciendo con el gurú","Tim Guest"],
+    ["Por la vida de mi hermana","Jodi Picoult"],
+    ["Los desnudos y los muertos","Norman Mailer"],
+    ["El nombre de la rosa","Umberto Eco"],
+    ["El buen nombre","Jhumpa Lahiri"],
+    ["Diario de una niñera","Emma McLaughlin"],
+    ["Nervous System: Or Losing My Mind in Literature","Jan Lars Jensen"],
+    ["Nuevos poemas de Emily Dickinson","Emily Dickinson"],
+    ["Cómo funcionan las cosas","David Macaulay"],
+    ["Por cuatro duros","Barbara Ehrenreich"],
+    ["La noche","Elie Wiesel"],
+    ["La abadía de Northanger","Jane Austen"],
+    ["The Norton Anthology of Theory and Criticism","William E. Cain et al"],
+    ["Novelas 1930-1942: Dance Night/Come Back to Sorrento, Turn, Magic Wheel/Angels on Toast/A Time to be Born","Dawn Powell"],
+    ["Escritos de un viejo indecente","Charles Bukowski"],
+    ["De ratones y hombres","John Steinbeck"],
+    ["Vieja escuela","Tobias Wolff"],
+    ["En el camino","Jack Kerouac"],
+    ["Alguien voló sobre el nido del cuco","Ken Kesey"],
+    ["Cien años de soledad","Gabriel García Márquez"],
+    ["En contra del destino","Amy Tan"],
+    ["La noche del oráculo","Paul Auster"],
+    ["Oryx y Crake","Margaret Atwood"],
+    ["Otelo","Shakespeare"],
+    ["Nuestro común amigo","Charles Dickens"],
+    ["El estallido de la guerra del Peloponeso","Donald Kagan"],
+    ["Memorias de África","Isak Dinesen"],
+    ["Rebeldes","S. E. Hinton"],
+    ["Pasaje a la India","E. M. Forster"],
+    ["The Peace of Nicias and the Sicilian Expedition","Donald Kagan"],
+    ["Las ventajas de ser un marginado","Stephen Chbosky"],
+    ["Peyton Place","Grace Metalious"],
+    ["El retrato de Dorian Gray","Oscar Wilde"],
+    ["Pigs at the Trough","Arianna Huffington"],
+    ["Pinocchio","Carlo Collodi"],
+    ["Por favor, mátame","Legs McNeil and Gillian McCain"],
+    ["The Polysyllabic Spree","Nick Hornby"],
+    ["Nietzche de bolsillo","Fredrich Nietzche"],
+    ["El precio de la lealtad","Ron Suskind"],
+    ["Orgullo y prejuicio","Jane Austen"],
+    ["Property","Valerie Martin"],
+    ["Pushkin: una biografía","T. J. Binyon"],
+    ["Pigmalión","George Bernard Shaw"],
+    ["Quattrocento","James Mckean"],
+    ["A Quiet Storm","Rachel Howzell Hall"],
+    ["Rapunzel","los hermanos Grimm"],
+    ["El cuervo","Edgar Allan Poe"],
+    ["El filo de la navaja","W. Somerset Maugham"],
+    ["Leer Lolita en Teherán","Azar Nafisi"],
+    ["Rebecca","Daphne du Maurier"],
+    ["Rebecca of Sunnybrook Farm","Kate Douglas Wiggin"],
+    ["La tienda roja","Anita Diamant"],
+    ["Rescuing Patty Hearst: Memories From a Decade Gone Mad","Virginia Holman"],
+    ["El retorno del rey (El Señor de los Anillos)","J. R. R. Tolkien"],
+    ["R de rebelde","Sue Grafton"],
+    ["Rita Hayworth","Stephen King"],
+    ["Robert's Rules of Order","Henry Robert"],
+    ["Fiebre Romana","Edith Wharton"],
+    ["Romeo y Julieta","William Shakespeare"],
+    ["Un cuarto propio","Virginia Woolf"],
+    ["Una habitación con vistas","E. M. Forster"],
+    ["El hijo de Rosemary","Ira Levin"],
+    ["Tiempo sagrado","Ursula Hegi"],
+    ["Santuario","William Faulkner"],
+    ["Savage Beauty: The Life of Edna St. Vincent Millay","Nancy Milford"],
+    ["Daisy Miller","Henry James"],
+    ["El Mago de Oz","Frank L. Baum"],
+    ["La letra escarlata","Nathaniel Hawthorne"],
+    ["Seabiscuit: una leyenda americana","Laura Hillenbrand"],
+    ["El segundo sexo","Simone de Beauvoir"],
+    ["La vida secreta de las abejas","Sue Monk Kidd"],
+    ["Secretos de la carne: Vida de Colette","Judith Thurman"],
+    ["Selected Letters of Dawn Powell: 1913-1965","Dawn Powell"],
+    ["Sentido y sensibilidad","Jane Austen"],
+    ["Una paz solo nuestra","John Knowles"],
+    ["The Last Lion: Winston Spencer Churchill: Visions of Glory, 1874-1932","William Manchester"],
+    ["The Last Lion: Winston Spencer Churchill: Defender of the Realm, 1940-1965","William Manchester"],
+    ["The Last Lion: Winston Spencer Churchill: Alone, 1932-1940","William Manchester"],
+    ["Sexus","Henry Miller"],
+    ["La sombra del viento","Carlos Ruiz Zafón"],
+    ["Shane","Jack Shaefer"],
+    ["El resplandor","Stephen King"],
+    ["Siddhartha","Hermann Hesse"],
+    ["S de silencio","Sue Grafton"],
+    ["Matadero cinco","Kurt Vonnegut"],
+    ["Pequeña isla","Andrea Levy"],
+    ["Las nieves del Kilimanjaro","Ernest Hemingway"],
+    ["Blancanieves y Rosarroja","los hermanos Grimm"],
+    ["Los orígenes sociales de la dictadura y de la democracia","Barrington Moore"],
+    ["Los nombres de la canción","Norman Lebrecht"],
+    ["Song of the Simple Truth: The Complete Poems of Julia de Burgos","Julia de Burgos"],
+    ["The Song Reader","Lisa Tucker"],
+    ["31 canciones","Nick Hornby"],
+    ["Sonetos","William Shakespeare"],
+    ["Los sonetos de la dama portuguesa","Elizabeth Barrett Browning"],
+    ["La decisión de Sophie","William Styron"],
+    ["El ruido y la furia","William Faulkner"],
+    ["Habla, memoria","Vladimir Nabokov"],
+    ["Fiambres: La fascinante vida de los cadáveres","Mary Roach"],
+    ["La historia de mi vida","Helen Keller"],
+    ["Un tranvía llamado deseo","Tennessee Williams"],
+    ["Stuart Little","E. B. White"],
+    ["Fiesta","Ernest Hemingway"],
+    ["Ahora brilla el sol","Ernest Hemingway"],
+    ["Por el camino de Swann","Marcel Proust"],
+    ["Swimming with Giants: My Encounters with Whales, Dolphins and Seals","Anne Collett"],
+    ["Sybil","Flora Rheta Schreiber"],
+    ["Historia de dos ciudades","Charles Dickens"],
+    ["Suave es la noche","F. Scott Fitzgerald"],
+    ["La fuerza del cariño","Larry McMurtry"],
+    ["Ahora y siempre","Jack Finney"],
+    ["La mujer del viajero en el tiempo","Audrey Niffenegger"],
+    ["Tener y no tener","Ernest Hemingway"],
+    ["Matar a un ruiseñor","Harper Lee"],
+    ["Ricardo III","William Shakespeare"],
+    ["Un árbol crece en Brooklyn","Betty Smith"],
+    ["El proceso","Franz Kafka"],
+    ["Las increíbles aventuras de las hermanas Hunt","Elisabeth Robinson"],
+    ["Truth & Beauty: A Friendship","Ann Patchett"],
+    ["Martes con mi viejo profesor","Mitch Albom"],
+    ["Ulises","James Joyce"],
+    ["Diarios de Sylvia Plath 1950-1962","Sylvia Plath"],
+    ["La cabaña del tío Tom","Harriet Beecher Stowe"],
+    ["Unless","Carol Shields"],
+    ["El valle de las muñecas","Jacqueline Susann"],
+    ["The Vanishing Newspaper","Philip Meyers"],
+    ["La hogera de las vanidades","William Makepeace Thackeray"],
+    ["Velvet Underground's The Velvet Underground and Nico (Thirty Three and a Third series)","Joe Harvard"],
+    ["Las vírgenes suicidas","Jeffrey Eugenides"],
+    ["Esperando a Godot","Samuel Beckett"],
+    ["Walden","Henry David Thoreau"],
+    ["Bambi","Felix Salten"],
+    ["Guerra y paz","León Tolstoi"],
+    ["We Owe You Nothing","Punk Planet: The Collected Interviews, editado por Daniel Sinker"],
+    ["¿De qué color es tu paracaídas?","Richard Nelson Bolles"],
+    ["¿Qué fue de Baby Jane?","Henry Farrell"],
+    ["Cuando el emperador era divino","Julie Otsuka"],
+    ["¿Quién se ha llevado mi queso?","Spencer Johnson"],
+    ["Quién teme a Virginia Woolf","Edward Albee"],
+    ["Wicked: memorias de una bruja mala","Gregory Maguire"],
+    ["Cumbres borrascosas","Emily Brontë"],
+    ["The Yearling","Marjorie Kinnan Rawlings"],
+    ["El año del pensamiento mágico","Joan Didion"],
+    ["Sueño de una noche de verano","William Shakespeare"],
+    ["Los puentes de Madison County","Robert James Waller"],
+    ["El color púrpura","Alice Walker"],
+    ["Contact","Carl Sagan"],
+    ["Drácula","Bram Stoker"],
+    ["Se acabó el pastel","Nora Ephron"],
+    ["El Hobbit","J.R.R. Tolkien"],
+    ["Indiana","George Sand"],
+    ["Parque Jurásico","Michael Crichton"],
+    ["El león, la bruja y el armario","C.S. Lewis"],
+    ["Los hombres son de Marte, las mujeres de Venus","John Gray, Ph.D."],
+    ["Mommie Dearest","Christina Crawford"],
+    ["Nancy Drew and The Witch Tree Symbol","Carolyn Keen"],
+    ["Nicholas Nickelby","Charles Dickens"],
+    ["El cascanueces","E.T.A. Hoffman, Alexandre Dumas"],
+    ["Edipo Rey","Sófocles"],
+    ["El rojo emblema del valor","Stephen Crane"],
+    ["Las brujas de Eastwick","John Updike"],
+    ["Desde el jardín","Jerzy Kosiński"],
+    ["He's just not that into you","Greg Behrendt, Liz Tuccillo"],
+    ["Las dos torres (El Señor de los Anillos)","J.R.R. Tolkien"],
+    ["Pippi Calzaslargas","Astrid Lindgren"],
+    ["Diez negritos","Agatha Christie"],
+    ["Oliver Twist","Charles Dickens"],
+    ["Charlie y la fábrica de chocolate","Roald Dahl"],
+    ["Mildred Pierce","James M. Cain"],
+    ["Solaris","Stanislaw Lem"],
+    ["Brokeback Mountain","Annie Proulx"],
+    ["La lista de Schindler","Thomas Keneally"],
+    ["Mary Poppins","P.L. Travers"],
+    ["Sailing Alone Around the Room","Billy Collins"],
+    ["Misery","Stephen King"],
+    ["De aquí a la eternidad","James Jones"],
+    ["El puente sobre el río Kwai","Pierre Boulle"],
+    ["Desayuno en Tiffany's","Truman Capote"],
+    ["Pregnancy sucks","Joanne Kimes"],
+    ["Cenicienta","Hermanos Grimm"],
+    ["2001: Una odisea espacial","Arthur C. Clarke"],
+    ["The skin of our teeth","Thornton Wilder"],
+    ["Una mente prodigiosa","Sylvia Nasar"],
+    ["Filtro de amor","Louise Erdrich"],
+    ["Dead calm","Charles Williams"],
+    ["Submarino","Lothar-Günther Buchheim"],
+    ["El paraíso perdido","John Milton"],
+    ["La insoportable levedad del ser","Milan Kundera"],
+    ["Cyrano de Bergerac","Edmond Rostand"],
+    ["La magia del orden","Marie Kondo"],
+    ["Hablemos de langostas","David Foster Wallace"],
+    ["El atlas de las nubes","David Mitchell"],
+    ["Forastera","Diana Gabaldon"],
+    ["Salvaje","Cheryl Strayed"],
+    ["Juego de tronos","George R.R. Martin"],
+    ["El cuello no engaña","Nora Ephron"],
+    ["La abadía de Tintern","William Wordsworth"],
+    ["Come, reza, ama","Elizabeth Gilbert"],
+    ["La llamada de lo salvaje","Jack London"],
+    ["La casa de la pradera","Laura Ingalls Wilder"],
+    ["La muerte del padre","Karl Ove Knausgård"]
+  ];
+
   var KEY = "oscars_v1";
   var store = {};
   try { store = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { store = {}; }
@@ -654,6 +1106,168 @@
   });
 
   render();
+
+  // ---- Libros (Rory Gilmore) ----
+  var TOTAL_B = BOOKS.length;
+
+  var KEY_B = "oscars_books_v1";
+  var storeB = {};
+  try { storeB = JSON.parse(localStorage.getItem(KEY_B) || "{}") || {}; } catch (e) { storeB = {}; }
+  function saveStoreB() { try { localStorage.setItem(KEY_B, JSON.stringify(storeB)); } catch (e) {} }
+  function recB(t) { return storeB[t] || { seen: false, rating: 0, note: "" }; }
+  function putB(t, r) { storeB[t] = r; saveStoreB(); }
+
+  function letterOf(title) {
+    var c = title.normalize("NFD").replace(/[̀-ͯ]/g, "").charAt(0).toUpperCase();
+    return /[A-Z]/.test(c) ? c : "#";
+  }
+
+  var listaB = document.getElementById("lista-b");
+  var elSeenB = document.getElementById("p-seen-b");
+  var elPctB = document.getElementById("p-pct-b");
+  var elFillB = document.getElementById("p-fill-b");
+  document.getElementById("p-total-b").textContent = TOTAL_B;
+
+  function seenCountB() {
+    var n = 0;
+    BOOKS.forEach(function (b) { if (recB(b[0]).seen) n++; });
+    return n;
+  }
+  function updateGlobalB() {
+    var s = seenCountB();
+    elSeenB.textContent = s;
+    var pct = TOTAL_B ? Math.round(s / TOTAL_B * 100) : 0;
+    elPctB.textContent = pct + "%";
+    elFillB.style.width = pct + "%";
+  }
+
+  function renderBooks() {
+    var q = document.getElementById("q-b").value.trim().toLowerCase();
+    var filtro = document.getElementById("filtro-b").value;
+    var orden = document.getElementById("orden-b").value;
+    var letra = document.getElementById("letra-b").value;
+
+    var items = BOOKS.filter(function (b) {
+      var r = recB(b[0]);
+      if (filtro === "pendientes" && r.seen) return false;
+      if (filtro === "vistas" && !r.seen) return false;
+      if (q && b[0].toLowerCase().indexOf(q) === -1 && b[1].toLowerCase().indexOf(q) === -1) return false;
+      if (letra !== "todas" && letterOf(b[0]) !== letra) return false;
+      return true;
+    });
+
+    items.sort(function (a, b) {
+      var r = a[0].localeCompare(b[0], "es", { sensitivity: "base" });
+      return orden === "desc" ? -r : r;
+    });
+
+    var groups = {}, order = [];
+    items.forEach(function (b) {
+      var L = letterOf(b[0]);
+      if (!groups[L]) { groups[L] = []; order.push(L); }
+      groups[L].push(b);
+    });
+    order.sort();
+    if (orden === "desc") order.reverse();
+
+    var html = "";
+    order.forEach(function (L) {
+      var books = groups[L];
+      var seen = books.filter(function (b) { return recB(b[0]).seen; }).length;
+
+      html += '<section class="year" id="letra-' + L + '">' +
+        '<div class="year-head"><span class="yr">' + L + '</span>' +
+        '<span class="count">' + seen + '/' + books.length + '</span></div>' +
+        '<ul class="films">';
+
+      books.forEach(function (b) {
+        var t = b[0], author = b[1], r = recB(t);
+        var qq = encodeURIComponent(t + (author ? " " + author : ""));
+        html += '<li class="film' + (r.seen ? " seen" : "") + '" data-title="' + esc(t) + '">' +
+          '<input type="checkbox" class="chk" ' + (r.seen ? "checked" : "") + ' aria-label="Marcar ' + esc(t) + ' como leído">' +
+          '<div class="info">' +
+            '<div><span class="title">' + esc(t) + '</span></div>' +
+            (author ? '<div class="dir">' + esc(author) + '</div>' : "") +
+            '<div class="meta-row">' +
+              '<a class="watch" href="https://www.goodreads.com/search?q=' + qq + '" target="_blank" rel="noopener noreferrer">★ Ver en Goodreads (reseñas)</a>' +
+              '<button class="note-btn" data-act="note">📝 ' + (r.note ? "Nota: " + esc(r.note) : "Añadir nota") + '</button>' +
+            '</div>' +
+            '<div class="note-box" hidden><input type="text" value="' + esc(r.note || "") + '" placeholder="Tu comentario sobre el libro…"></div>' +
+          '</div>' +
+          '<div class="stars" role="group" aria-label="Puntuación">' + starsHTML(r.rating) + '</div>' +
+        '</li>';
+      });
+      html += "</ul></section>";
+    });
+
+    listaB.innerHTML = items.length ? html : '<p class="empty">No hay libros con ese filtro o búsqueda.</p>';
+    updateGlobalB();
+  }
+
+  listaB.addEventListener("change", function (e) {
+    if (e.target.classList.contains("chk")) {
+      var li = e.target.closest(".film"); var t = li.getAttribute("data-title");
+      var r = recB(t); r.seen = e.target.checked; putB(t, r);
+      li.classList.toggle("seen", r.seen);
+      if (document.getElementById("filtro-b").value !== "todas") renderBooks(); else { updateGlobalB(); updateLetterCount(li); }
+    }
+  });
+  listaB.addEventListener("input", function (e) {
+    if (e.target.matches(".note-box input")) {
+      var li = e.target.closest(".film"); var t = li.getAttribute("data-title");
+      var r = recB(t); r.note = e.target.value; putB(t, r);
+      li.querySelector('[data-act="note"]').textContent = "📝 " + (r.note ? "Nota: " + r.note : "Añadir nota");
+    }
+  });
+  listaB.addEventListener("click", function (e) {
+    var star = e.target.closest(".s");
+    if (star) {
+      var li = e.target.closest(".film"); var t = li.getAttribute("data-title");
+      var val = parseInt(star.getAttribute("data-star"), 10);
+      var r = recB(t); r.rating = (r.rating === val) ? 0 : val; putB(t, r);
+      li.querySelector(".stars").querySelectorAll(".s").forEach(function (s) {
+        s.classList.toggle("on", parseInt(s.getAttribute("data-star"), 10) <= r.rating);
+      });
+      return;
+    }
+    var nb = e.target.closest('[data-act="note"]');
+    if (nb) { var box = nb.parentNode.nextElementSibling; box.hidden = !box.hidden; if (!box.hidden) box.querySelector("input").focus(); }
+  });
+
+  function updateLetterCount(li) {
+    var section = li.closest(".year"); if (!section) return;
+    var total = section.querySelectorAll("li.film").length;
+    var seen = section.querySelectorAll("li.film.seen").length;
+    section.querySelector(".count").textContent = seen + "/" + total;
+  }
+
+  // Rellenar selector de letra
+  var lettersSeen = {};
+  BOOKS.forEach(function (b) { lettersSeen[letterOf(b[0])] = true; });
+  document.getElementById("letra-b").innerHTML = '<option value="todas">Todas las letras</option>' +
+    Object.keys(lettersSeen).sort().map(function (L) {
+      return '<option value="' + L + '">' + L + '</option>';
+    }).join("");
+
+  ["q-b", "letra-b", "filtro-b", "orden-b"].forEach(function (id) { document.getElementById(id).addEventListener("input", renderBooks); });
+  document.getElementById("reset-b").addEventListener("click", function () {
+    if (!confirm("¿Borrar todo tu progreso de lectura (leídos, notas y puntuaciones)?")) return;
+    storeB = {}; saveStoreB(); renderBooks();
+  });
+
+  renderBooks();
+
+  // ---- Pestañas ----
+  var pageOscars = document.getElementById("page-oscars");
+  var pageBooks = document.getElementById("page-books");
+  document.querySelectorAll(".tab-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll(".tab-btn").forEach(function (b) { b.classList.toggle("active", b === btn); });
+      var tab = btn.getAttribute("data-tab");
+      pageOscars.hidden = tab !== "oscars";
+      pageBooks.hidden = tab !== "books";
+    });
+  });
 })();
 </script>
 </body>
